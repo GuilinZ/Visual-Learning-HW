@@ -1,24 +1,25 @@
 import argparse
 from student_code.simple_baseline_experiment_runner import SimpleBaselineExperimentRunner
 from student_code.coattention_experiment_runner import CoattentionNetExperimentRunner
-
-
+from tensorboardX import SummaryWriter
+import os
+import time
 if __name__ == "__main__":
     # Feel free to add more args, or change/remove these.
     parser = argparse.ArgumentParser(description='Load VQA.')
     parser.add_argument('--model', type=str, choices=['simple', 'coattention'], default='simple')
-    parser.add_argument('--train_image_dir', type=str)
-    parser.add_argument('--train_question_path', type=str)
-    parser.add_argument('--train_annotation_path', type=str)
-    parser.add_argument('--test_image_dir', type=str)
-    parser.add_argument('--test_question_path', type=str)
-    parser.add_argument('--test_annotation_path', type=str)
-    parser.add_argument('--batch_size', type=int, default=100)
-    parser.add_argument('--num_epochs', type=int, default=100)
+    parser.add_argument('--train_image_dir', type=str, default='/home/ubuntu/Visual-Learning-HW/hw3-main/data/train2014')
+    parser.add_argument('--train_question_path', type=str, default='/home/ubuntu/Visual-Learning-HW/hw3-main/data/OpenEnded_mscoco_train2014_questions.json')
+    parser.add_argument('--train_annotation_path', type=str, default='/home/ubuntu/Visual-Learning-HW/hw3-main/data/mscoco_train2014_annotations.json')
+    parser.add_argument('--test_image_dir', type=str, default='/home/ubuntu/Visual-Learning-HW/hw3-main/data/val2014')
+    parser.add_argument('--test_question_path', type=str, default='/home/ubuntu/Visual-Learning-HW/hw3-main/data/OpenEnded_mscoco_val2014_questions.json')
+    parser.add_argument('--test_annotation_path', type=str, default='/home/ubuntu/Visual-Learning-HW/hw3-main/data/mscoco_val2014_annotations.json')
+    parser.add_argument('--batch_size', type=int, default=64)
+    parser.add_argument('--num_epochs', type=int, default=10)
     parser.add_argument('--num_data_loader_workers', type=int, default=10)
     parser.add_argument('--cache_location', type=str, default="")
     parser.add_argument('--lr', type=float, default=4e-4)
-    parser.add_argument('--log_validation', action='store_true')
+    parser.add_argument('--log_validation', action='store_true', default=True)
     args = parser.parse_args()
 
     if args.model == "simple":
@@ -28,6 +29,8 @@ if __name__ == "__main__":
     else:
         raise ModuleNotFoundError()
 
+    # log_path = '../logs/'
+    writer = SummaryWriter()
     experiment_runner = experiment_runner_class(train_image_dir=args.train_image_dir,
                                                 train_question_path=args.train_question_path,
                                                 train_annotation_path=args.train_annotation_path,
@@ -39,5 +42,7 @@ if __name__ == "__main__":
                                                 num_data_loader_workers=args.num_data_loader_workers,
                                                 cache_location=args.cache_location,
                                                 lr=args.lr,
-                                                log_validation=args.log_validation)
+                                                log_validation=args.log_validation,
+                                                load_saved_dict=False,
+                                                writer=writer)
     experiment_runner.train()

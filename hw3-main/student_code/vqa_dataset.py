@@ -56,7 +56,7 @@ class VqaDataset(Dataset):
             # raise NotImplementedError()
         else:
             self.question_word_to_id_map = question_word_to_id_map
-
+        self.id_to_question_word_map = self._invert_map(self.question_word_to_id_map)
         # Create the answer map if necessary
         if answer_to_id_map is None:
             ############ 1.7 TODO
@@ -75,8 +75,12 @@ class VqaDataset(Dataset):
             # raise NotImplementedError()
         else:
             self.answer_to_id_map = answer_to_id_map
-
-
+        self.id_to_answer_map = self._invert_map(self.answer_to_id_map)
+    def _invert_map(self,input_map):
+        out_map = {}
+        for k,v in input_map.items():
+            out_map[v] = k
+        return out_map
     def _create_word_list(self, sentences):
         """
         Turn a list of sentences into a list of processed words (no punctuation, lowercase, etc)
@@ -119,7 +123,7 @@ class VqaDataset(Dataset):
                 str_to_freq[_str] += 1
         sorted_list = sorted(str_to_freq.items(), key = lambda x: x[1], reverse = True)
         for i in range(max_list_length):
-            str_to_rank[sorted_list[i]] = i
+            str_to_rank[sorted_list[i][0]] = i
 
         return str_to_rank
         ############
@@ -159,11 +163,11 @@ class VqaDataset(Dataset):
             ############ 1.9 TODO
             # load the image from disk, apply self._transform (if not None)
             img_file = self._image_filename_pattern.format('%012d'%(img_id))
-            img = Image.open(os.path.join(self._image_dir, img_file))
-            if not self._transform:
+            img = Image.open(os.path.join(self._image_dir, img_file)).convert('RGB')
+            if self._transform:
                 img = self._transform(img)
             else:
-                img = torchvision.tranforms.ToTensor()(img)
+                img = torchvision.transforms.ToTensor()(img)
             ############
             # raise NotImplementedError()
 
@@ -202,7 +206,8 @@ class VqaDataset(Dataset):
         res['img'] = img
         res['question'] = torch.tensor(q_encoding)
         res['answer'] = torch.tensor(a_encoding)
-
+        res['question_id'] = question_id
+        res['img_id'] = img_id
         return res
         ############
         # raise NotImplementedError()
