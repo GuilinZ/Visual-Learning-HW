@@ -156,9 +156,23 @@ class VqaDataset(Dataset):
         if self._cache_location is not None and self._pre_encoder is not None:
             ############ 3.2 TODO
             # implement your caching and loading logic here
-
+            img_cache_path = os.join(self._cache_location, '%012d.npz'%(img_id))
+            try:
+                features = np.load(img_cache_path)['features']
+                img = features
+            except:
+                img_file = self._image_filename_pattern.format('%012d' % (img_id))
+                img = Image.open(os.path.join(self._image_dir, img_file)).convert('RGB')
+                if self._transform:
+                    img = self._transform(img)
+                else:
+                    img = torchvision.transforms.ToTensor()(img)
+                self._pre_encoder.eval()
+                features = self._pre_encoder(img.unsqueeze(0))
+                np.savez(img_cache_path, features=features.detach().numpy())
+                img = features
             ############
-            raise NotImplementedError()
+            # raise NotImplementedError()
         else:
             ############ 1.9 TODO
             # load the image from disk, apply self._transform (if not None)
