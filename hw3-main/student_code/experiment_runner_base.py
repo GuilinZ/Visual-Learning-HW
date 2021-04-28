@@ -14,7 +14,7 @@ class ExperimentRunnerBase(object):
         self._num_epochs = num_epochs
         self._batch_size = batch_size
         self._log_freq = 10  # Steps
-        self._test_freq = 400  # Steps
+        self._test_freq = 100  # Steps
         self._writer = writer
         self._train_dataset = train_dataset
         self._val_dataset = val_dataset
@@ -78,14 +78,18 @@ class ExperimentRunnerBase(object):
             # you probably want to plot something here
             self._writer.add_scalar('Validation Loss', val_loss, current_step)
 
-            log_img = img.cpu()[0]
-            invTrans = transforms.Compose([transforms.Normalize(mean=[0., 0., 0.],
-                                                                std=[1 / 0.229, 1 / 0.224, 1 / 0.225]),
-                                           transforms.Normalize(mean=[-0.485, -0.456, -0.406],
-                                                                std=[1., 1., 1.]),
-                                           # transforms.ToPILImage()
-                                           ])
-            log_img = invTrans(log_img)
+            #====================================
+            #Validation Image Visualization
+            #Remove comments for visualizing baseline validation images
+            # log_img = img.cpu()[0]
+            # invTrans = transforms.Compose([transforms.Normalize(mean=[0., 0., 0.],
+            #                                                     std=[1 / 0.229, 1 / 0.224, 1 / 0.225]),
+            #                                transforms.Normalize(mean=[-0.485, -0.456, -0.406],
+            #                                                     std=[1., 1., 1.]),
+            #                                # transforms.ToPILImage()
+            #                                ])
+            # log_img = invTrans(log_img)
+            #====================================
             # plt.imshow(log_img)
             # plt.show()
             q_map = self._train_dataset.id_to_question_word_map
@@ -105,7 +109,7 @@ class ExperimentRunnerBase(object):
             self._writer.add_text('Step%d Ground Truth'%current_step, log_gt)
             self._writer.add_text('Step%d Prediction'%current_step, log_prediction)
             self._writer.add_text('Step%d Question'%current_step, log_question)
-            self._writer.add_image('Step%d Image'%current_step, log_img)
+            # self._writer.add_image('Step%d Image'%current_step, log_img)
         return val_acc
             ############
         # raise NotImplementedError()
@@ -167,4 +171,4 @@ class ExperimentRunnerBase(object):
                     self._writer.add_scalar('Validation Accuracy', val_accuracy, current_step)
                     ############
             torch.save(self._model.state_dict(), self.model_path + 'epoch_%d.pth'%(epoch))
-            print('epoch %d model saved'%epoch)
+            print('epoch %d model saved'%epoch, 'to ', self.model_path)

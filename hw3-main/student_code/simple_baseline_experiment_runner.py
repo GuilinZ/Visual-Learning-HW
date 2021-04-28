@@ -11,7 +11,7 @@ class SimpleBaselineExperimentRunner(ExperimentRunnerBase):
     """
     def __init__(self, train_image_dir, train_question_path, train_annotation_path,
                  test_image_dir, test_question_path,test_annotation_path, batch_size, num_epochs,
-                 num_data_loader_workers, cache_location, lr, log_validation, load_saved_dict=False,writer=None):
+                 num_data_loader_workers, cache_location, lr, log_validation,writer=None):
 
         ############ 2.3 TODO: set up transform
 
@@ -23,12 +23,8 @@ class SimpleBaselineExperimentRunner(ExperimentRunnerBase):
 
         ############
 
-        if load_saved_dict:
-            question_word_to_id_map = None
-            answer_to_id_map = None
-        else:
-            question_word_to_id_map = None
-            answer_to_id_map = None
+        question_word_to_id_map = None
+        answer_to_id_map = None
 
         train_dataset = VqaDataset(image_dir=train_image_dir,
                                    question_json_file_path=train_question_path,
@@ -65,24 +61,22 @@ class SimpleBaselineExperimentRunner(ExperimentRunnerBase):
                                             momentum=0.9)
 
 
-        # self.lr_decrease_factor = 0.1
-        # self.lr_decay_freq = 5
         ############
 
 
     def _optimize(self, predicted_answers, true_answer_ids):
         ############ 2.7 TODO: compute the loss, run back propagation, take optimization step.
         self.optimizer.zero_grad()
-        loss = nn.CrossEntropyLoss()
-        output = loss(predicted_answers, true_answer_ids)
+        criterion = nn.CrossEntropyLoss()
+        loss = criterion(predicted_answers, true_answer_ids)
         if self._model.training:
-            output.backward()
+            loss.backward()
 
             torch.nn.utils.clip_grad_norm_(self._model.parameters(), 20)
             self.optimizer.step()
             self._model.word_embedding.weight.data.clamp(-1500, 1500)
             self._model.fc.weight.data.clamp(-20, 20)
 
-        return output
+        return loss
         ############
         # raise NotImplementedError()

@@ -156,7 +156,7 @@ class VqaDataset(Dataset):
         if self._cache_location is not None and self._pre_encoder is not None:
             ############ 3.2 TODO
             # implement your caching and loading logic here
-            img_cache_path = os.join(self._cache_location, '%012d.npz'%(img_id))
+            img_cache_path = os.path.join(self._cache_location, '%012d.npz'%(img_id))
             try:
                 features = np.load(img_cache_path)['features']
                 img = features
@@ -167,7 +167,6 @@ class VqaDataset(Dataset):
                     img = self._transform(img)
                 else:
                     img = torchvision.transforms.ToTensor()(img)
-                self._pre_encoder.eval()
                 features = self._pre_encoder(img.unsqueeze(0))
                 np.savez(img_cache_path, features=features.detach().numpy())
                 img = features
@@ -218,8 +217,8 @@ class VqaDataset(Dataset):
 
         res = {}
         res['img'] = img
-        res['question'] = torch.tensor(q_encoding)
-        res['answer'] = torch.tensor(a_encoding)
+        res['question'] = torch.tensor(q_encoding).type(torch.FloatTensor)
+        res['answer'] = torch.tensor(a_encoding).type(torch.FloatTensor)
         res['question_id'] = question_id
         res['img_id'] = img_id
         return res
